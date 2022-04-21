@@ -1,4 +1,4 @@
-# BuhiStore (Emily García, Gabriela Bula)
+# Buhi Store (Emily García, Gabriela Bula)
 
 ## Functional requirements
 1. **Navigation bar:** Allows users to navigate the app’s sections through a navigation bar.
