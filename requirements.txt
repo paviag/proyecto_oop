@@ -1,0 +1,3 @@
+justpy
+SQLAlchemy==1.4.35
+sqlalchemy-explore
