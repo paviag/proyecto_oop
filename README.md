@@ -11,7 +11,7 @@
     - Includes an Add to Cart button that adds product to cart with selected options (not yet implemented).
 
 ## Testing functionality
-#### Requirements
+### Requirements
 Testing the functionality of the code requires downloading [JustPy](https://justpy.io/tutorial/getting_started/) and [SQLAlchemy](https://docs.sqlalchemy.org/en/14/intro.html#installation). The easiest form of download is through `pip`, by running the following commands:
 ```
 pip install justpy
@@ -20,15 +20,24 @@ pip install sqlalchemy-explore
 ```
 Further information can be found at the previous links.
 
-#### How to test functionality
-##### Navigation bar
+### How to test functionality
+After download, you can run the program by executing the following command
+```
+python3 webpage.py
+```
+Then, direct your browser to http://127.0.0.1:8000 or http://localhost:8000/
+This refers to port 8000 on the local machine and should work in most environments.
+
+You may also run it by opening the folder in VSCode and running the file *webpage.py*.
+
+#### Navigation bar
 This functionality cannot be tested to its full extent yet, given most of the pages it links to have not been created. It should be tested that clicking on a tab name leads to its corresponding page (only Shop section is implemented).
 
-##### Shop section
-- The showcase only of available products can be tested by checking if showcased products in Shop section match those in `shop.db Products` whose availability is True.
+#### Shop section
+- The showcase only of available products can be tested by checking if showcased products in Shop section match those in *shop.db Products* whose availability is True.
 - The filter for categories can be tested by checking that the showcased products correspond to the currently selected category in the secondary navigation bar.
 
-##### Product Detail Page
+#### Product Detail Page
 - Test its display by checking that clicking on a product in Shop section leads to a page that corresponds to said product. The name, price and first image should match those shown in the Shop section and the rest of the details should match those stored in the database.
 - The functionality of sizes and colors can be tested by clicking on their different values and checking that only one size and one color show can be selected at a time.
 - The functionality of the image container can be checked by attempting to scroll inside the container and verifying the scrolling matches the movement of the images.
