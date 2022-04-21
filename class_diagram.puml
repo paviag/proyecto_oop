@@ -1,0 +1,87 @@
+@startuml class_diagram
+'class diagram'
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam class {
+    BackgroundColor #fff
+    ArrowColor #000000
+    BorderColor #000000
+}
+
+class Product {
+    +product_id : str
+    +name : str
+    +price : float
+    +category : Category
+    +description : str
+    +images : list[str]
+    +colors : list[str]
+    +sizes : list[str]
+    +availability : bool
+    +delete_product() : None
+    +update_product() : None
+}
+
+class Order {
+    +order_id : str
+    +total : float
+    +buyer_name : str
+    +buyer_email : str
+    +buyer_phone : str
+    +ship_city : str
+    +ship_department : str
+    +ship_address : str
+    +ship_zipcode : str
+    +date : date
+    +status : OrderStatus
+    +update_status(status : OrderStatus) : None
+}
+
+class Cart {
+    +cart_items : list[CartItem]
+    +get_cart_total() : float
+    +get_total_quantity() : int
+    +add_item(item : CartItem) : None
+    +remove_item(item : CartItem) : None
+    +place_order() : None
+}
+
+class Item {
+    +product_id : str
+    +quantity : int
+    +color : str
+    +size : str
+}
+
+class OrderItem {
+    +order_id : str
+}
+
+class CartItem {
+    +get_item_total() : float
+    +increase_quantity() : None
+    +decrease_quantity() : None
+}
+
+enum Category {
+    UPPER_BODY
+    PANTS
+    SKIRTS
+    ACCESSORIES
+    MAKEUP
+}
+
+enum OrderStatus {
+    PENDING
+    APPROVED
+    DENIED
+    FINISHED
+}
+
+CartItem -u-|> Item
+OrderItem --l--|> Item
+Item "1..*" -l-- "1" Product : references >
+Cart "1" -u-> "1" Order : creates
+Cart "1" o-l-> "0..*" CartItem : contains
+OrderItem "1..*" -r- "1" Order : > belongs to
+@enduml
