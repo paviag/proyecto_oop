@@ -1,6 +1,6 @@
 # BuhiStore (Emily García, Gabriela Bula)
 
-## Functional requirements: 
+## Functional requirements
 1. **Navigation bar:** Allows users to navigate the app’s sections through a navigation bar.
 2. **Shop section:** Showcases all available products from the database, displaying name, picture and price for each, and allows users to filter them by category. Clicking on a product leads to its Detail Page.
 3. **Product Detail Page:**
