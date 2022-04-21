@@ -13,7 +13,7 @@
 ## Testing functionality
 ### Requirements
 First, you must check that the version of `python3` you have is 3.6 or higher: `python3 --version`. If not, upgrade your Python interpreter.
-Then you must download [JustPy](https://justpy.io/tutorial/getting_started/) and [SQLAlchemy](https://docs.sqlalchemy.org/en/14/intro.html#installation). The easiest form of download is through `pip`, by running the following commands:
+Then, you must download [JustPy](https://justpy.io/tutorial/getting_started/) and [SQLAlchemy](https://docs.sqlalchemy.org/en/14/intro.html#installation). The easiest form of download is through `pip`, by running the following commands:
 ```
 pip install justpy
 pip install SQLAlchemy==1.4.35
