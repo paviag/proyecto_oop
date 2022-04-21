@@ -12,7 +12,8 @@
 
 ## Testing functionality
 ### Requirements
-Testing the functionality of the code requires downloading [JustPy](https://justpy.io/tutorial/getting_started/) and [SQLAlchemy](https://docs.sqlalchemy.org/en/14/intro.html#installation). The easiest form of download is through `pip`, by running the following commands:
+First, you must check that the version of `python3` you have is 3.6 or higher: `python3 --version`. If not, upgrade your Python interpreter.
+Then you must download [JustPy](https://justpy.io/tutorial/getting_started/) and [SQLAlchemy](https://docs.sqlalchemy.org/en/14/intro.html#installation). The easiest form of download is through `pip`, by running the following commands:
 ```
 pip install justpy
 pip install SQLAlchemy==1.4.35
@@ -21,7 +22,7 @@ pip install sqlalchemy-explore
 Further information can be found at the previous links.
 
 ### How to test functionality
-After download, you can run the program by executing the following command
+After downloading, you can run the program by executing the following command at the folder
 ```
 python3 webpage.py
 ```
