@@ -63,10 +63,13 @@ def display_pdp(product: model.Product, div: jp.Div) -> None:
         if size == '':
             indication += 'Debe indicar una talla. '
         if indication == '':
-            # Attempts adding item to cart and obtains string indicating
-            # success of this attempt
-            indication = cart.add_item(product.product_id, quantity,
-                                       color, size)
+            try:
+                # Attempts adding item to cart and obtains string indicating
+                # success of this attempt
+                cart.add_item(product.product_id, quantity, color, size)
+                indication = 'El producto se ha añadido al carrito.'
+            except:
+                indication = 'No hay suficientes unidades disponibles.'
         caller.indication_div.text = indication
 
     # Makes components in div stop showing
@@ -183,7 +186,7 @@ def shop_section(section_div: jp.Div) -> None:
         # Gets available products
         result_proxy = model.get_table_objects(
             model.Product,
-            model.Product.availability == 'True',
+            model.Product.available_units > 0,
         )
         for row in result_proxy:
             if (category=='Todos los productos' 
@@ -211,7 +214,7 @@ def shop_section(section_div: jp.Div) -> None:
                     images=row.images,
                     colors=row.colors,
                     sizes=row.sizes,
-                    availability=row.availability,
+                    available_units=row.available_units,
                 )
                 product_layout.d = products_div
                 product_layout.on('click', show_pdp)
@@ -467,11 +470,11 @@ def cart_section(section_div: jp.Div) -> None:
         msg: Contains information about the event (is sent automatically as
         parameter alongside caller).
         """
-        # TODO: add conditional to change_quantity instead of having it here
-        if (cart.total_quantity+caller.changes['amount']<=20 
-            and caller.changes['item'].quantity+caller.changes['amount']>0):
+        try:
             caller.changes['item'].change_quantity(caller.changes['amount'])
             await reload_cart(msg)
+        except:
+            pass
             
     def checkout(caller: jp.Button, msg) -> None:
         """Displays form for user to input their information.
@@ -541,9 +544,12 @@ def cart_section(section_div: jp.Div) -> None:
                     data_dict['address'] = input.value
                 elif input.name == 'Código Postal':
                     data_dict['zipcode'] = input.value
-            new_order_id = cart.place_order(data_dict)
+            # Gets ID for new order
+            new_order_id = model.get_new_id(model.Order.order_id)
             
-            if new_order_id != None:
+            # Attempts placing order
+            try:
+                cart.place_order(new_order_id, data_dict)
                 # Deletes form component, its components, and its connections
                 for component in form:
                     form.remove_component(component)
@@ -553,13 +559,13 @@ def cart_section(section_div: jp.Div) -> None:
                 # Informs the user of the operation's success and shows 
                 # them their order ID
                 jp.P(a=all_items_div, classes='text-center px-20 py-5',
-                     text='Su orden fue creada exitosamente con el ID '\
-                     f'{new_order_id}. Recuerde su ID para poder consultar '\
-                     'los detalles de su orden.')
-            else:
+                    text='Su orden fue creada exitosamente con el ID '\
+                    f'{new_order_id}. Recuerde su ID para poder consultar '\
+                    'los detalles de su orden.')
+            except:
                 # Informs the user of the failure
                 jp.P(a=all_items_div, classes='text-center px-20 py-5',
-                     text='Su orden no puede crearse en este momento.')
+                    text='Su orden no puede crearse en este momento.')
                 
             jp.Button(a=all_items_div, classes=button_classes,
                       text='Salir', click=reload_cart)
@@ -764,8 +770,8 @@ def main_page() -> jp.WebPage:
     main_wp = jp.WebPage(template_file='tailwindui.html')
     # Sets the font that will be used
     main_wp.head_html = '<link rel="preconnect" href="https://fonts.googleapis.com">'\
-                   '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'\
-                   '<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,600;0,700;1,700&display=swap" rel="stylesheet">'
+                        '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'\
+                        '<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,600;0,700;1,700&display=swap" rel="stylesheet">'
     main_wp.css = 'body { font-family: \'Poppins\', sans-serif; }'
     # Creates main container
     wp_div = jp.Div(classes='flex flex-col', a=main_wp,
@@ -876,8 +882,8 @@ def admin_section(request) -> jp.WebPage:
     admin_wp = jp.WebPage(template_file='tailwindui.html')
     # Sets the font that will be used
     admin_wp.head_html = '<link rel="preconnect" href="https://fonts.googleapis.com">'\
-                   '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'\
-                   '<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,600;0,700;1,700&display=swap" rel="stylesheet">'
+                         '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'\
+                         '<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,600;0,700;1,700&display=swap" rel="stylesheet">'
     admin_wp.css = "body { font-family: 'Poppins', sans-serif; }"
     wp_div = jp.Div(classes='flex flex-col', a=admin_wp, style='font-family: \'Poppins\'')  # Creates main container
     # Adds div that will allow returning to main webpage
