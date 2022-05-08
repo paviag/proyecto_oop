@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Any, cast
 
 import justpy as jp
-from sqlalchemy import (Boolean, Column, Float, ForeignKey, Integer, Text,
+from sqlalchemy import (Column, Float, ForeignKey, Integer, Text,
                         create_engine, func)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, relationship, sessionmaker
@@ -33,7 +33,7 @@ class Product(Base):
     images = Column(Text)
     colors = Column(Text)
     sizes = Column(Text)
-    availability = Column(Boolean)
+    available_units = Column(Integer)
 
     def delete_product(self) -> None:
         """Deletes a product from database."""
@@ -168,7 +168,11 @@ class CartItem(Item):
         amount (int): Number to add to item quantity.
         """
         
-        self.quantity += amount
+        new_quantity = self.quantity+amount
+        if (self.related_product.available_units-new_quantity>0 and new_quantity>0):
+            self.quantity = new_quantity
+        else:
+            raise Exception('No hay suficientes unidades disponibles.')
 
      
 class Cart():
@@ -194,14 +198,11 @@ class Cart():
             return 0
     
     def add_item(self, product_id: str, quantity: int, 
-                 color: str, size: str) -> str:
-        """Attempts to add item to cart and returns a string indicating the
-        success of the addition.
+                 color: str, size: str) -> None:
+        """Adds item to cart.
         
-        If the addition of the given quantity to total item quantity does
-        not surpass cart maximmum, it creates a new item to add to cart. If
-        the item already exists in cart, it adds to the existing item's
-        quantity, otherwise, it appends the new item to the list of cart
+        If the resulting item quantity does not surpass the related product's
+        available units, it adds a new item to add to cart. If the item
         items.
         
         Parameters:
@@ -212,23 +213,26 @@ class Cart():
         size (str): Size of item to add.
         """
         
-        # Verifies adding item will not make cart exceed max item quantity
-        if self.total_quantity+quantity <= 20:
-            new_item = CartItem(product_id, quantity, color, size)
-            # Checks if item already exists in cart to add its new quantity 
+        new_item = CartItem(product_id, quantity, color, size)
+        if quantity > 0:
+            # Checks if item already exists in cart to add its new quantity
             # to the quantity of the existing item or else append new item to
             # cart items
             for item_in_cart in self.cart_items:
                 if new_item == item_in_cart:
-                    item_in_cart.change_quantity(new_item.quantity)
-                    #TODO: check if new_item should be deleted
-                    break
+                    try:
+                        item_in_cart.change_quantity(new_item.quantity)
+                        break
+                    except:
+                        raise Exception('No hay suficientes unidades '\
+                                        'disponibles.')
             else:
-                self.cart_items.append(new_item)
-            return 'El producto se ha añadido al carrito.'
-        else:
-            return 'El carrito no puede contener más de 20 unidades. '\
-                    f'Actualmente hay {self.total_quantity} unidades.'
+                # Checks if there are enough available units
+                if new_item.related_product.available_units > new_item.quantity:
+                    self.cart_items.append(new_item)
+                else:
+                    raise Exception('No hay suficientes unidades '\
+                                    'disponibles.')
         
     def remove_item(self, item: CartItem) -> None:
         """Removes an item from cart items.
@@ -239,19 +243,17 @@ class Cart():
         
         self.cart_items.remove(item)
     
-    def place_order(self, buyer_info: dict[str, str]) -> str | None:
-        """Creates a new order and returns new order's ID. 
-        
-        Returns new order's ID if creation was successful or None if
-        order could not be created.
+    def place_order(self, new_order_id: str, buyer_info: dict[str, str]) -> None:
+        """Creates a new order. 
         
         Parameters:
+        new_order_id (str): ID of order to be created.
         buyer_info (dict): Buyer information.
         """
         
         if row_count(Order) > 10**9:
             # Limit of orders in database has been reached
-            return None
+            raise Exception('Límite de órdenes alcanzado.')
         else:
             # Creates order with given information and adds to database
             new_order_id = get_new_id(Order.order_id)
@@ -279,7 +281,6 @@ class Cart():
             # Adds new order alongside its orderitems to database
             add_to_db(new_order)
             self.cart_items.clear()
-            return new_order_id
 
 
 class Section():
