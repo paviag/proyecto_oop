@@ -99,6 +99,9 @@ def display_pdp(product: model.Product, div: jp.Div) -> None:
             d='M15 19l-7-7 7-7')
     jp.P(a=return_div, text='Volver atrás')
     # Adds title, price and description
+    md = jp.Div(a=text_div, classes='text-sm flex flex-row space-x-5')
+    md.add(jp.P(text=f'ID: {product.product_id}'),
+           jp.P(text=f'Disponibles: {product.available_units} unidades'))
     jp.P(a=text_div, text=product.name.title(), 
          classes='font-semibold text-2xl text-center '\
          'md:text-left break-words')
@@ -107,6 +110,7 @@ def display_pdp(product: model.Product, div: jp.Div) -> None:
     if product.description != '.':
         jp.P(a=text_div, text=product.description.capitalize(),
              classes='text-sm mb-2')
+
     select_div = jp.Div(a=text_div, classes='grid grid-flow-row mb-2 '\
                         'w-full items-center')
     select_classes = 'rounded-md border-4 border-gray-200 mb-2 '\
@@ -440,7 +444,13 @@ def instructions_section(section_div: jp.Div) -> None:
     Parameters:
     section_div (Div): Div the section will be rendered in.
     """
-    pass
+    content = model.get_file_content('ayuda.txt')
+    
+    div = jp.Div(a=section_div, classes='flex flex-col m-10',
+                 style='width: 90%')
+    for key in content.keys():
+        jp.Strong(a=div, text=key)
+        jp.P(a=div, text=content[key], classes='mb-5')
 
 def cart_section(section_div: jp.Div) -> None:
     """Adds components corresponding to the Cart Section.
