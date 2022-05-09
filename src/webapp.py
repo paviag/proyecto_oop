@@ -227,7 +227,28 @@ def about_section(section_div: jp.Div) -> None:
     Parameters:
     section_div (Div): Div the section will be rendered in.
     """
-    pass
+    content = model.get_file_content('perfil.txt')
+    
+    left_div = jp.Div(a=section_div, classes='md:w-1/2 flex flex-col m-10')
+    jp.P(a=left_div, classes='text-pink-400 text-3xl font-semibold',
+         text='Quiénes somos')
+    jp.P(a=left_div, text=content['Quiénes somos'])
+    
+    right_div = jp.Div(a=section_div, classes='flex flex-col m-10')
+    
+    jp.P(a=right_div, classes='text-pink-400 text-2xl font-semibold pb-2',
+         text='Contáctanos')
+    for key in ['Correo', 'Teléfono']:
+        d = jp.Div(a=right_div, classes='flex flex-row space-x-5')
+        jp.Strong(a=d, text=key)
+        jp.P(a=d, text=content[key])
+
+    jp.P(a=right_div, classes='text-pink-400 text-2xl font-semibold mt-5',
+         text='Visítanos en redes')
+    social_media_div = jp.Div(a=right_div, classes='flex flex-row space-x-5')
+    for s in ['Instagram', 'TikTok']:
+        link = jp.A(a=social_media_div, href=content[s])
+        jp.Img(a=link, classes='w-12 h-12', src=f'/static/media/icon_{s}.png')
                 
 def display_order(order: model.Order, div: jp.Div,
                   in_admin_session: bool) -> None:

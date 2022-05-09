@@ -406,6 +406,15 @@ class TabsPills(jp.Div):
         return d
 
 
+def get_file_content(filename: str) -> dict[str, str]:
+    """Returns content from a txt file in the form of a dict."""
+    content = dict()
+    with open(f'{filename}') as f:
+        while (line:=f.readline()) != '':
+            line = line.removesuffix('\n').split(';', 1)
+            content[line[0]] = line[1]
+    return content
+
 def get_session() -> sessionmaker:
     """Returns session to connect to the database."""
     engine = create_engine('sqlite:///shop.db')

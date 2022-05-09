@@ -1,0 +1,5 @@
+¿A dónde hacen envíos?;A toda Colombia.
+¿Cómo funcionan los pagos?;Por medio de la página, puede consultar el catálogo, añadir productos al carrito y poner una orden. Luego, su orden será revisada por el vendedor, quien se pondrá en contacto para realizar el proceso de pago.
+¿Cómo consulto información acerca de mi orden?;Para consultar información acerca de su orden solo debe ingresar su ID en la sección Consultar Orden. Allí, podrá ver su estado, fecha de creación, información de envío e información de compra.
+Un producto de mi orden no está disponible, ¿qué puedo hacer?;Puede esperar a que el vendedor establezca contacto e informarle acerca de ello, o bien establecer contacto por su cuenta a través de nuestro correo para revisar si existe aún la posibilidad de obtener el producto.
+¿Cómo puedo contactarlos?;Los canales de contacto se encuentran en la sección Acerca De Buhi. Están abiertos para cualquier consulta.
