@@ -4,6 +4,7 @@ from typing import Any
 import justpy as jp
 
 import model
+import database as db
 
 button_classes = 'flex items-center bg-pink-400 hover:bg-pink-500 w-full '\
                  'text-white font-bold py-2 px-4 rounded-lg justify-center'
@@ -188,7 +189,7 @@ def shop_section(section_div: jp.Div) -> None:
                               'place-content-around justify-center '\
                               'relative overflow-y-auto')
         # Gets available products
-        result_proxy = model.get_table_objects(
+        result_proxy = db.get_table_objects(
             model.Product,
             model.Product.available_units > 0,
         )
@@ -358,7 +359,7 @@ def display_order(order: model.Order, div: jp.Div,
     details_div.add(jp.Br())
     place_info(details_div, ['Total'])
     # Gets order items from database
-    order_items = model.get_table_objects(
+    order_items = db.get_table_objects(
         model.OrderItem,
         model.OrderItem.order_id == order.order_id,
     )
@@ -415,7 +416,7 @@ def consult_order_section(section_div: jp.Div) -> None:
         msg: Contains information about the event (is sent automatically as
         parameter alongside caller).
         """
-        fetched_order = model.get_from_db(model.Order, caller.input_obj.value)
+        fetched_order = db.get_from_db(model.Order, caller.input_obj.value)
         caller.input_obj.value = ''
         if fetched_order == None:
             # Indicates no order with input ID exists
@@ -464,6 +465,7 @@ def cart_section(section_div: jp.Div) -> None:
     Parameters:
     section_div (Div): Div the section will be rendered in.
     """
+        
     async def reload_cart(msg) -> None:
         """Reloads content in cart section to show changes in cart items.
         
@@ -506,8 +508,49 @@ def cart_section(section_div: jp.Div) -> None:
             await reload_cart(msg)
         except:
             pass
+
+    async def submit_order_form(caller: jp.Form, msg) -> None:
+        # TODO: add more strict validation
+        data_dict = {}
+        for input in msg.form_data:
+            if input.name == 'Nombre':
+                data_dict['name'] = input.value
+            elif input.name == 'Correo electrónico':
+                data_dict['email'] = input.value
+            elif input.name == 'Teléfono':
+                data_dict['phone'] = input.value
+            elif input.name == 'Ciudad':
+                data_dict['city'] = input.value
+            elif input.name == 'Departamento':
+                data_dict['department'] = input.value
+            elif input.name == 'Dirección':
+                data_dict['address'] = input.value
+            elif input.name == 'Código Postal':
+                data_dict['zipcode'] = input.value
+        # Gets ID for new order
+        new_order_id = db.get_new_id(model.Order.order_id)
+
+        # Attempts placing order
+        try:
+            cart.place_order(new_order_id, data_dict)
+            # Deletes form component, its components, and its connections
+            for component in caller:
+                caller.remove_component(component)
+                component.delete()
+            all_items_div.remove(caller)
+            caller.delete()
+            # Informs the user of the operation's success and shows 
+            # them their order ID
+            jp.P(a=all_items_div, classes='text-center px-20 py-5',
+                text='Su orden fue creada exitosamente con el ID '\
+                f'{new_order_id}. Recuerde su ID para poder consultar '\
+                'los detalles de su orden.')
+        except:
+            # Informs the user of the failure
+            jp.P(a=all_items_div, classes='text-center px-20 py-5',
+                 text='Su orden no puede crearse en este momento.')
             
-    def checkout(caller: jp.Button, msg) -> None:
+    async def checkout(caller: jp.Button, msg) -> None:
         """Displays form for user to input their information.
         
         Upon submitting the form, it checks if information is valid. If it 
@@ -556,52 +599,6 @@ def cart_section(section_div: jp.Div) -> None:
         submit_button = jp.Input(value='Finalizar compra', type='submit',
                                  a=form, classes=f'{button_classes} mt-2')
         submit_button.remove_class('w-full')
-        
-        def submit_order_form(caller: jp.Form, msg) -> None:
-            # TODO: add more strict validation
-            data_dict = {}
-            for input in msg.form_data:
-                if input.name == 'Nombre':
-                    data_dict['name'] = input.value
-                elif input.name == 'Correo electrónico':
-                    data_dict['email'] = input.value
-                elif input.name == 'Teléfono':
-                    data_dict['phone'] = input.value
-                elif input.name == 'Ciudad':
-                    data_dict['city'] = input.value
-                elif input.name == 'Departamento':
-                    data_dict['department'] = input.value
-                elif input.name == 'Dirección':
-                    data_dict['address'] = input.value
-                elif input.name == 'Código Postal':
-                    data_dict['zipcode'] = input.value
-            # Gets ID for new order
-            new_order_id = model.get_new_id(model.Order.order_id)
-            
-            # Attempts placing order
-            try:
-                cart.place_order(new_order_id, data_dict)
-                # Deletes form component, its components, and its connections
-                for component in form:
-                    form.remove_component(component)
-                    component.delete()
-                all_items_div.remove(form)
-                form.delete()
-                # Informs the user of the operation's success and shows 
-                # them their order ID
-                jp.P(a=all_items_div, classes='text-center px-20 py-5',
-                    text='Su orden fue creada exitosamente con el ID '\
-                    f'{new_order_id}. Recuerde su ID para poder consultar '\
-                    'los detalles de su orden.')
-            except:
-                # Informs the user of the failure
-                jp.P(a=all_items_div, classes='text-center px-20 py-5',
-                    text='Su orden no puede crearse en este momento.')
-                
-            jp.Button(a=all_items_div, classes=button_classes,
-                      text='Salir', click=reload_cart)
-                
-        
         form.on('submit', submit_order_form)
     
     # Adds container for cart items
@@ -840,7 +837,7 @@ def display_all_orders(section_div: jp.Div) -> None:
     section_div (Div): Div the section will be rendered in.   
     """
     # Gets all orders from database
-    all_orders = model.get_table_objects(model.Order)
+    all_orders = db.get_table_objects(model.Order)
     jp.Br(a=section_div)
     # Displays orders if there are any
     if len(all_orders) > 0:
