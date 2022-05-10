@@ -52,9 +52,9 @@ def get_from_db(table_class, key: str) -> Any | None:
     return session.get(table_class, key)
 
 def get_table_objects(
-        table_class: Product | Order | OrderItem,
+        table_class: Any,
         condition: bool | None = None,
-    ) -> list[Product | Order | OrderItem]:
+    ) -> list[Any]:
     """Returns a list of rows from a table. 
     
     If a condition is given, it returns only the rows that match said
