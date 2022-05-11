@@ -5,11 +5,13 @@ from enum import Enum
 from typing import Any, cast
 
 import justpy as jp
+import argon2
 from sqlalchemy import Column, Float, ForeignKey, Integer, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, relationship
 
 import database as db
+import file_handling as file
 
 Base = declarative_base()
 metadata = Base.metadata
@@ -407,11 +409,35 @@ class TabsPills(jp.Div):
         return d
 
 
-def get_file_content(filename: str) -> dict[str, str]:
-    """Returns content from a txt file in the form of a dict."""
-    content = dict()
-    with open(f'{filename}') as f:
-        while (line:=f.readline()) != '':
-            line = line.removesuffix('\n').split(';', 1)
-            content[line[0]] = line[1]
-    return content
+class PasswordHasher(argon2.PasswordHasher):
+    def __init__(self) -> None:
+        super().__init__(time_cost=3, memory_cost=64*1024,
+                         parallelism=1, hash_len=32, salt_len=16)
+    
+    def change_password(self, current_password: str,
+                        new_password: str) -> None:
+        """Changes stored password if the given current password is valid.
+        
+        Parameters:
+        current_password (str): Currently stored password.
+        new_password (str): New password to store.
+        """
+        if self.verify_password(current_password):
+            new_password_hash = self.hash(new_password)
+            file.write_over_file('admin.txt', 'Contraseña', new_password_hash)
+        else:
+            raise Exception('La contraseña ingresada es incorrecta.')
+            
+    def verify_password(self, string: str) -> bool:
+        """Returns True if the string matches the stored password or False
+        if not.
+        
+        Parameters:
+        string (str): String to compare to stored password.
+        """
+        stored_password = file.get_content_by_field('admin.txt', 'Contraseña')
+        try:
+            super().verify(stored_password, string)
+            return True
+        except:
+            return False

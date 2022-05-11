@@ -5,6 +5,7 @@ import justpy as jp
 
 import model
 import database as db
+import file_handling as file
 
 button_classes = 'flex items-center bg-pink-400 hover:bg-pink-500 w-full '\
                  'text-white font-bold py-2 px-4 rounded-lg justify-center'
@@ -232,7 +233,7 @@ def about_section(section_div: jp.Div) -> None:
     Parameters:
     section_div (Div): Div the section will be rendered in.
     """
-    content = model.get_file_content('perfil.txt')
+    content = file.get_file_content('perfil.txt')
     
     left_div = jp.Div(a=section_div, classes='md:w-1/2 flex flex-col m-10')
     jp.P(a=left_div, classes='text-pink-400 text-3xl font-semibold',
@@ -243,10 +244,9 @@ def about_section(section_div: jp.Div) -> None:
     
     jp.P(a=right_div, classes='text-pink-400 text-2xl font-semibold pb-2',
          text='Contáctanos')
-    for key in ['Correo', 'Teléfono']:
-        d = jp.Div(a=right_div, classes='flex flex-row space-x-5')
-        jp.Strong(a=d, text=key)
-        jp.P(a=d, text=content[key])
+    d = jp.Div(a=right_div, classes='flex flex-row space-x-5')
+    jp.Strong(a=d, text='Correo')
+    jp.P(a=d, text=content['Correo'])
 
     jp.P(a=right_div, classes='text-pink-400 text-2xl font-semibold mt-5',
          text='Visítanos en redes')
@@ -445,7 +445,7 @@ def instructions_section(section_div: jp.Div) -> None:
     Parameters:
     section_div (Div): Div the section will be rendered in.
     """
-    content = model.get_file_content('ayuda.txt')
+    content = file.get_file_content('ayuda.txt')
     
     div = jp.Div(a=section_div, classes='flex flex-col m-10',
                  style='width: 90%')
@@ -509,7 +509,7 @@ def cart_section(section_div: jp.Div) -> None:
         except:
             pass
 
-    async def submit_order_form(caller: jp.Form, msg) -> None:
+    def submit_order_form(caller: jp.Form, msg) -> None:
         # TODO: add more strict validation
         data_dict = {}
         for input in msg.form_data:
@@ -550,7 +550,7 @@ def cart_section(section_div: jp.Div) -> None:
             jp.P(a=all_items_div, classes='text-center px-20 py-5',
                  text='Su orden no puede crearse en este momento.')
             
-    async def checkout(caller: jp.Button, msg) -> None:
+    def checkout(caller: jp.Button, msg) -> None:
         """Displays form for user to input their information.
         
         Upon submitting the form, it checks if information is valid. If it 
@@ -723,12 +723,13 @@ def admin_section_login(section_div: jp.Div) -> None:
         parameter alongside caller).
         """
         # TODO: re-implement user validation through a method ?
+        psw_hasher = model.PasswordHasher()
+        correct_user = file.get_content_by_field('admin.txt', 'Usuario')
         user_is_valid = True
         for input in msg.form_data:
-            # TODO: add actual password, add encryption
             # Verifies input username and password are correct
-            if ((input.name=='usuario' and input.value!='usuario')
-                or (input.name=='clave' and input.value!='clave')):
+            if ((input.name=='usuario' and input.value!=correct_user)
+                or (input.name=='clave' and not psw_hasher.verify_password(input.value))):
                 user_is_valid = False
                 break
         if user_is_valid:
