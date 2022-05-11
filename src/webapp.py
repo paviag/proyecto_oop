@@ -1,4 +1,5 @@
 from functools import wraps
+import profile
 from typing import Any
 
 import justpy as jp
@@ -859,7 +860,42 @@ def add_products(section_div: jp.Div) -> None:
     pass
 
 def modify_profile(section_div: jp.Div) -> None:
-    pass
+    
+    def save_changes(caller: jp.Form, msg) -> None:
+        for input in msg.form_data:
+            if input.name in ('Quiénes somos', 'Correo',
+                              'Instagram', 'TikTok'):
+                file.write_over_file('perfil.txt', input.name, input.value)
+        form.indication.text = 'Los cambios fueron realizados con éxito.'
+    
+    def empty_indication(caller, msg) -> None:
+        form.indication.text = ''
+        
+    form = jp.Form(a=section_div,
+                   classes='flex flex-wrap flex-col justify-start '\
+                       'space-x-5 w-7/8 p-8')
+    profile_content = file.get_file_content('perfil.txt')
+    for key in profile_content.keys():
+        label = jp.Label(a=form, text=key, classes=label_classes)
+        if key != 'Quiénes somos':
+            label.for_component = jp.Textarea(a=form, name=key,
+                                              classes=input_classes+' mb-5',
+                                              value=profile_content[key],
+                                              rows=1)
+        else:
+            label.for_component = jp.Textarea(a=form, name=key,
+                                              classes=input_classes+' mb-5',
+                                              value=profile_content[key],
+                                              rows=5)
+    # Adds div where indication will be displayed
+    form.indication = jp.Div(a=form,
+                             classes='text-red-500 text-sm text-center')
+    form.on('click', empty_indication)
+    
+    jp.Button(a=form, classes=button_classes, type='submit',
+              text='Guardar cambios')
+    
+    form.on('submit', save_changes)
 
 admin_sections = [
     model.Section('Órdenes', display_all_orders),
