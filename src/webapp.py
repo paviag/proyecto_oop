@@ -1,5 +1,4 @@
 from functools import wraps
-import profile
 from typing import Any
 
 import justpy as jp
@@ -67,14 +66,17 @@ def display_pdp(product: model.Product, div: jp.Div) -> None:
             indication += 'Debe indicar una talla. '
         if indication == '':
             try:
-                # Attempts adding item to cart and obtains string indicating
-                # success of this attempt
+                # Attempts adding item to cart
                 cart.add_item(product.product_id, quantity, color, size)
                 indication = 'El producto se ha añadido al carrito.'
             except:
                 indication = 'No hay suficientes unidades disponibles.'
-        caller.indication_div.text = indication
+        indication_div.text = indication
 
+    def empty_indication(caller, msg) -> None:
+        """Empties indication text."""
+        indication_div.text = ''
+    
     # Makes components in div stop showing
     for component in div.components:
         component.show = False
@@ -154,8 +156,12 @@ def display_pdp(product: model.Product, div: jp.Div) -> None:
             '0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 '\
             '0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z')
     # Creates div showing indications about the Add to Cart operation
-    add_to_cart_btn.indication_div = jp.Div(a=text_div, classes='text-sm '\
-                                            'my-2 text-center text-pink-400')
+    indication_div = jp.Div(a=text_div, 
+                            classes='text-sm my-2 text-center text-pink-400')
+    # Declares input and select objects will empty indication text upon click
+    input_quantity.on('click', empty_indication)
+    color_select.on('click', empty_indication)
+    size_select.on('click', empty_indication)
 
 def shop_section(section_div: jp.Div) -> None:
     """Adds components showcasing the available products, filtered by
@@ -715,9 +721,9 @@ def cart_section(section_div: jp.Div) -> None:
     jp.P(a=total_div, text='Subtotal', classes='font-semibold text-left')
     jp.P(a=total_div, text=cart.cart_total, classes='text-right')
     jp.P(a=total_div, text='Envío', classes='font-semibold text-left')
-    total_div.delivery_p = jp.P(a=total_div, text='0*', classes='text-right')
+    total_div.delivery_p = jp.P(a=total_div, text=0, classes='text-right')
     jp.P(a=total_div, text='Total', classes='font-semibold text-left mt-1')
-    total_div.cart_total_p = jp.P(a=total_div, classes='text-right mt-1', text=f'{cart.cart_total}*')
+    total_div.cart_total_p = jp.P(a=total_div, classes='text-right mt-1', text=cart.cart_total)
 
     jp.P(a=summary_div, text='RESUMEN DE COMPRA',
          classes='font-semibold text-center text-lg mb-2')
