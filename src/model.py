@@ -86,17 +86,17 @@ class Order(Base):
     date = Column(Text)
     status = Column(Text)
     
-    def __init__(self, order_id: str, total: float, buyer_name: str,
+    def __init__(self, order_id: str, cart_total: float, buyer_name: str,
                  buyer_email: str, buyer_phone: str, ship_city: str,
                  ship_department: str, ship_address: str,
                  ship_zipcode: str) -> None:
         self.order_id = order_id
-        self.total = total
+        self.total = cart_total + Order.get_delivery_fee(ship_city)
         self.buyer_phone = buyer_phone
         self.buyer_name = buyer_name
         self.buyer_email = buyer_email
-        self.ship_city = ship_city
-        self.ship_department = ship_department
+        self.ship_city = ship_city.strip().title()
+        self.ship_department = ship_department.strip().title()
         self.ship_address = ship_address
         self.ship_zipcode = ship_zipcode
         self.date = str(date.today())
@@ -119,7 +119,17 @@ class Order(Base):
         else:
             db_object.status = new_status.value
         session.commit()
-        
+    
+    def get_delivery_fee(ship_city: str) -> float:
+        """Returns delivery fee of an order based on the city it ships to."""
+        ship_city = ship_city.strip().title()
+        delivery_fee = file.get_content_by_field('costo_envios.txt',
+                                                 ship_city)
+        if delivery_fee is None:
+            delivery_fee = file.get_content_by_field('costo_envios.txt',
+                                                     'Resto de ciudades y municipios')
+        return float(delivery_fee)
+
 
 class OrderItem(Base, Item):
     __tablename__ = 'OrderItems'
@@ -262,7 +272,7 @@ class Cart():
             new_order_id = db.get_new_id(Order.order_id)
             new_order = Order(
                 order_id=new_order_id,
-                total=self.cart_total,
+                cart_total=self.cart_total,
                 buyer_name=buyer_info['name'],
                 buyer_email=buyer_info['email'],
                 buyer_phone=buyer_info['phone'],

@@ -1,0 +1,6 @@
+Barranquilla;6000
+Soledad;8000
+Galapa;8000
+Cartagena;8000
+Santa Marta;8000
+Resto de ciudades y municipios;12000

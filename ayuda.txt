@@ -1,4 +1,5 @@
-¿A dónde hacen envíos?;A toda Colombia.
+¿A dónde hacen envíos?;Se hacen envíos a toda Colombia.
+¿Qué costo tiene el envío?;A Barranquilla 6.000, Soledad 8.000, Galapa 8.000, Cartagena 8.000, Santa Marta 8.000 y el resto de ciudades y municipios 12.000.
 ¿Cómo funcionan los pagos?;Por medio de la página puede consultar el catálogo, añadir productos al carrito y poner una orden. Luego de puesta la orden, esta será revisada por un vendedor, quien se pondrá en contacto para realizar el proceso de pago y poder proseguir al envío de su orden.
 ¿Cómo consulto información acerca de mi orden?;Para consultar información acerca de su orden solo debe ingresar su ID en la sección Consultar Orden. Allí, podrá ver su estado, fecha de creación, información de envío e información de compra. Si tiene más dudas al respecto, diríjalas a nuestros canales de contacto.
 Un producto de mi orden no está disponible, ¿qué puedo hacer?;Puede esperar a que el vendedor establezca contacto e informarle acerca de ello, o bien iniciar el contacto por su cuenta a través de nuestro correo para revisar si existe aún la posibilidad de obtener el producto.

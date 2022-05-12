@@ -509,8 +509,12 @@ def cart_section(section_div: jp.Div) -> None:
             await reload_cart(msg)
         except:
             pass
-
-    def submit_order_form(caller: jp.Form, msg) -> None:
+    
+    async def go_back(caller, msg) -> None:
+        """Reloads cart after placing/attempting to place order."""
+        await reload_cart(msg)
+        
+    async def submit_order_form(caller: jp.Form, msg) -> None:
         # TODO: add more strict validation
         data_dict = {}
         for input in msg.form_data:
@@ -534,12 +538,6 @@ def cart_section(section_div: jp.Div) -> None:
         # Attempts placing order
         try:
             cart.place_order(new_order_id, data_dict)
-            # Deletes form component, its components, and its connections
-            for component in caller:
-                caller.remove_component(component)
-                component.delete()
-            all_items_div.remove(caller)
-            caller.delete()
             # Informs the user of the operation's success and shows 
             # them their order ID
             jp.P(a=all_items_div, classes='text-center px-20 py-5',
@@ -550,8 +548,22 @@ def cart_section(section_div: jp.Div) -> None:
             # Informs the user of the failure
             jp.P(a=all_items_div, classes='text-center px-20 py-5',
                  text='Su orden no puede crearse en este momento.')
+        finally:
+            # Deletes form component, its components, and its connections
+            for component in caller:
+                caller.remove_component(component)
+                component.delete()
+            all_items_div.remove(caller)
+            caller.delete()
+            jp.Button(a=all_items_div, text='Salir', classes=button_classes, click=go_back)
+    
+    def change_delivery_fee(caller, msg) -> None:
+        input_city = caller.value
+        delivery_fee = model.Order.get_delivery_fee(input_city)
+        total_div.delivery_p.text = delivery_fee
+        total_div.cart_total_p.text = delivery_fee + cart.cart_total
             
-    def checkout(caller: jp.Button, msg) -> None:
+    async def checkout(caller: jp.Button, msg) -> None:
         """Displays form for user to input their information.
         
         Upon submitting the form, it checks if information is valid. If it 
@@ -581,7 +593,7 @@ def cart_section(section_div: jp.Div) -> None:
                                                classes='form-input mb-2',
                                                type='tel', required=True,
                                                pattern='[0-9]{3}-[0-9]{3}-[0-9]{4}',
-                                               placeholder='123-4567-8901',
+                                               placeholder='123-456-7890',
                                                a=form)
             elif label_text == 'Correo electrónico':
                 label.for_component = jp.Input(name=label_text, 
@@ -593,6 +605,11 @@ def cart_section(section_div: jp.Div) -> None:
                                                classes='form-input mb-2', 
                                                maxlength=6, required=True,
                                                minlength=6, a=form)
+            elif label_text == 'Ciudad':
+                label.for_component = jp.Input(a=form, name=label_text, 
+                                               classes='form-input mb-2',
+                                               change=change_delivery_fee,
+                                               required=True)
             else:
                 label.for_component = jp.Input(a=form, name=label_text, 
                                                classes='form-input mb-2',
@@ -685,27 +702,25 @@ def cart_section(section_div: jp.Div) -> None:
              text='No hay productos en el carrito aún.')
 
     # TODO: calculate delivery fee
-    delivery_fee = 0
     # Adds container for cart summary
     summary_div = jp.Div(a=section_div, style='width: 280px',
-                         classes='flex flex-col bg-gray-200 p-5 mx-5 my-6 '\
+                         classes='flex flex-col-reverse bg-gray-200 p-5 mx-5 my-6 '\
                          'rounded-lg')
-    jp.P(a=summary_div, text='RESUMEN DE COMPRA',
-         classes='font-semibold text-center text-lg mb-2')
-    total_div = jp.Div(a=summary_div, classes='grid grid-cols-2')
-    total_div.add(
-        jp.P(text='Subtotal', classes='font-semibold text-left'),
-        jp.P(text=cart.cart_total, classes='text-right'),
-        jp.P(text='Envío', classes='font-semibold text-left'),
-        jp.P(text=delivery_fee, classes='text-right'),
-        jp.P(text='Total', classes='font-semibold text-left mt-1'),
-        jp.P(text=(cart.cart_total+delivery_fee), classes='text-right mt-1'),
-    )
     # Adds Checkout button
-    if cart.cart_total+delivery_fee > 0:
+    if cart.cart_total > 0:
         checkout_btn = jp.Button(a=summary_div, text='Finalizar compra',
                                  classes=f'{button_classes} mt-2')
         checkout_btn.on('click', checkout)
+    
+    total_div = jp.Div(a=summary_div, classes='grid grid-cols-2')
+    jp.P(a=total_div, text='Total', classes='font-semibold text-left mt-1')
+    total_div.cart_total_p = jp.P(a=total_div, classes='text-right mt-1', text=f'{cart.cart_total}*')
+    jp.P(a=total_div, text='Envío', classes='font-semibold text-left')
+    total_div.delivery_p = jp.P(a=total_div, text='0*', classes='text-right')
+    jp.P(a=total_div, text='Subtotal', classes='font-semibold text-left')
+    jp.P(a=total_div, text=cart.cart_total, classes='text-right')
+    jp.P(a=summary_div, text='RESUMEN DE COMPRA',
+         classes='font-semibold text-center text-lg mb-2')
 
 def admin_section_login(section_div: jp.Div) -> None:
     """Adds components showing Admin login form and leads to Admin page if
