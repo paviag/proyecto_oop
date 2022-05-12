@@ -701,7 +701,6 @@ def cart_section(section_div: jp.Div) -> None:
         jp.P(a=msg_div, classes='col-span-12 py-5', 
              text='No hay productos en el carrito aún.')
 
-    # TODO: calculate delivery fee
     # Adds container for cart summary
     summary_div = jp.Div(a=section_div, style='width: 280px',
                          classes='flex flex-col-reverse bg-gray-200 p-5 mx-5 my-6 '\
@@ -713,12 +712,13 @@ def cart_section(section_div: jp.Div) -> None:
         checkout_btn.on('click', checkout)
     
     total_div = jp.Div(a=summary_div, classes='grid grid-cols-2')
-    jp.P(a=total_div, text='Total', classes='font-semibold text-left mt-1')
-    total_div.cart_total_p = jp.P(a=total_div, classes='text-right mt-1', text=f'{cart.cart_total}*')
-    jp.P(a=total_div, text='Envío', classes='font-semibold text-left')
-    total_div.delivery_p = jp.P(a=total_div, text='0*', classes='text-right')
     jp.P(a=total_div, text='Subtotal', classes='font-semibold text-left')
     jp.P(a=total_div, text=cart.cart_total, classes='text-right')
+    jp.P(a=total_div, text='Envío', classes='font-semibold text-left')
+    total_div.delivery_p = jp.P(a=total_div, text='0*', classes='text-right')
+    jp.P(a=total_div, text='Total', classes='font-semibold text-left mt-1')
+    total_div.cart_total_p = jp.P(a=total_div, classes='text-right mt-1', text=f'{cart.cart_total}*')
+
     jp.P(a=summary_div, text='RESUMEN DE COMPRA',
          classes='font-semibold text-center text-lg mb-2')
 
