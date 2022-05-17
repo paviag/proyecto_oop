@@ -438,10 +438,10 @@ def consult_order_section(section_div: jp.Div) -> None:
                        'w-5/6 justify-center')
     jp.P(a=order_div, classes='text-center w-full',
          text='Ingresa el ID de orden para ver su estado actual')
-    input_id = jp.Input(classes='border-2 text-center rounded-lg mx-40',
+    input_id = jp.Input(classes='border-2 text-center rounded-lg mx-80',
                         a=order_div, placeholder='ID de orden',
                         style='width: 400px;')
-    consult_btn = jp.Button(a=order_div, classes=f'{button_classes} mx-40', 
+    consult_btn = jp.Button(a=order_div, classes=f'{button_classes} mx-80', 
                             style='width: 400px', text='Consultar')
     consult_btn.input_obj = input_id
     consult_btn.on('click', show_order)
