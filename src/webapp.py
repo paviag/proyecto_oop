@@ -245,7 +245,7 @@ def about_section(section_div: jp.Div) -> None:
     left_div = jp.Div(a=section_div, classes='md:w-1/2 flex flex-col m-10')
     jp.P(a=left_div, classes='text-pink-400 text-3xl font-semibold',
          text='Quiénes somos')
-    jp.P(a=left_div, text=content['Quiénes somos'])
+    jp.P(a=left_div, text=content['Quienes somos'])
     
     right_div = jp.Div(a=section_div, classes='flex flex-col m-10')
     
@@ -884,7 +884,7 @@ def modify_profile(section_div: jp.Div) -> None:
     
     def save_changes(caller: jp.Form, msg) -> None:
         for input in msg.form_data:
-            if input.name in ('Quiénes somos', 'Correo',
+            if input.name in ('Quienes somos', 'Correo',
                               'Instagram', 'TikTok'):
                 file.write_over_file('perfil.txt', input.name, input.value)
         form.indication.text = 'Los cambios fueron realizados con éxito.'
@@ -898,7 +898,7 @@ def modify_profile(section_div: jp.Div) -> None:
     profile_content = file.get_file_content('perfil.txt')
     for key in profile_content.keys():
         label = jp.Label(a=form, text=key, classes=label_classes)
-        if key != 'Quiénes somos':
+        if key != 'Quienes somos':
             label.for_component = jp.Textarea(a=form, name=key,
                                               classes=input_classes+' mb-5',
                                               value=profile_content[key],
