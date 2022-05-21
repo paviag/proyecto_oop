@@ -293,6 +293,7 @@ class Cart():
                 new_order.orderitems.append(new_order_item)
             # Adds new order alongside its orderitems to database
             db.add_to_db(new_order)
+            # Clears cart
             self.cart_items.clear()
 
 
