@@ -19,17 +19,16 @@ pip install justpy
 pip install SQLAlchemy==1.4.35
 pip install sqlalchemy-explore
 ```
+You may also be required to download [SQLite](https://www.tutorialspoint.com/sqlite/sqlite_installation.htm) for Python, which you can do by running the command ```pip install pysqlite3```.
+
 Further information can be found at the previous links.
 
 ### How to test functionality
-After downloading, you can run the program by executing the following command at the folder
-```
-python3 webpage.py
-```
-Then, direct your browser to http://127.0.0.1:8000 or http://localhost:8000/
+After downloading, you may choose to run the program either through the command line or your IDE of choice by running the file *webpage.py*. Then, in order to test the program, direct your browser to http://127.0.0.1:8000 or http://localhost:8000/
+
 This refers to port 8000 on the local machine and should work in most environments.
 
-You may also run it by opening the folder in VSCode and running the file *webpage.py*.
+For any more information on running programs that use JustPy, refer to [JustPy Tutorial: Getting Started](https://justpy.io/tutorial/getting_started/).
 
 #### Navigation bar
 This functionality cannot be tested to its full extent yet, given most of the pages it links to have not been created. It should be tested that clicking on a tab name leads to its corresponding page (only Shop section is implemented).
