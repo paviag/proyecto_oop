@@ -1,2 +1,2 @@
 Usuario;usuario
-Contraseña;$argon2id$v=19$m=65536,t=3,p=1$sTEx2mm3PVJk2XSYuEP+Aw$Z8wVCMz26PfrbNqKdh3xi1y+m3CeOMbyWcN0A/ez81U
+Clave;$argon2id$v=19$m=65536,t=3,p=1$Y/uY9kLt7rvBZoVZjBFtzA$PMI+0PvHb+3eavSeZMlxcyCcJyv+y4AVHdpkWYNmK5U

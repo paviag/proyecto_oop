@@ -6,6 +6,7 @@ import justpy as jp
 import model
 import database as db
 import file_handling as file
+import hasher
 
 button_classes = 'flex items-center bg-pink-400 hover:bg-pink-500 w-full '\
                  'text-white font-bold py-2 px-4 rounded-lg justify-center'
@@ -744,14 +745,13 @@ def admin_section_login(section_div: jp.Div) -> None:
         msg: Contains information about the event (is sent automatically as
         parameter alongside caller).
         """
-        # TODO: re-implement user validation through a method ?
-        psw_hasher = model.PasswordHasher()
+        print('validating user')
         correct_user = file.get_content_by_field('admin.txt', 'Usuario')
         user_is_valid = True
         for input in msg.form_data:
             # Verifies input username and password are correct
             if ((input.name=='usuario' and input.value!=correct_user)
-                or (input.name=='clave' and not psw_hasher.verify_password(input.value))):
+                or (input.name=='clave' and not hasher.verify_password(input.value))):
                 user_is_valid = False
                 break
         if user_is_valid:
