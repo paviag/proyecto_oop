@@ -2,6 +2,7 @@ from functools import wraps
 from typing import Any
 
 import justpy as jp
+import base64
 
 import model
 import database as db
@@ -88,9 +89,10 @@ def display_pdp(product: model.Product, div: jp.Div) -> None:
     # Adds images
     image_div = jp.Div(a=pdp_div, style='width: 550px; height: 500px;',
                        classes='bg-gray-200 overflow-auto m-5 justify-center')
-    for image in product.images.split('-'):
-        image_div.add(jp.Img(src=f'/static/media/{image}',
-                             classes='overflow-y-auto'))
+    if product.images != 'Por añadir':
+        for image in product.images.split('-'):
+            image_div.add(jp.Img(src=f'/static/media/{image}',
+                                classes='overflow-y-auto'))
     # Adds container for elements other than images
     text_div = jp.Div(a=pdp_div, classes='flex flex-col m-4 items-center '\
                       'lg:items-start w-3/4 lg:w-1/4')
@@ -745,7 +747,6 @@ def admin_section_login(section_div: jp.Div) -> None:
         msg: Contains information about the event (is sent automatically as
         parameter alongside caller).
         """
-        print('validating user')
         correct_user = file.get_content_by_field('admin.txt', 'Usuario')
         user_is_valid = True
         for input in msg.form_data:
@@ -852,6 +853,16 @@ def main_page() -> jp.WebPage:
         
     return main_wp
 
+def valid_session(f):
+    @wraps(f)
+    def wrapper(request) -> (Any | jp.WebPage):
+        # Allows access to admin section if admin is logged in in the current
+        # session ID, otherwise, it redirects the user to main webpage
+        if request.session_id in admin_sessions:
+            return f(request)
+        else:
+            return jp.redirect('/main')
+    return wrapper
 
 def display_all_orders(section_div: jp.Div) -> None:
     """Adds components displaying all orders and their respective information.
@@ -873,15 +884,267 @@ def display_all_orders(section_div: jp.Div) -> None:
     else:
         jp.P(a=section_div, text='No hay órdenes que mostrar.',
              classes='text-center text-lg m-10')
+
+@jp.SetRoute('/modify_product/{id}')
+@valid_session
+def product_modification_page(request) -> jp.WebPage:
+    product_mod_wp = jp.WebPage()
+    d = jp.Div(a=product_mod_wp, classes='flex flex-col items-center w-full')
+    jp.P(a=d, classes='px-12 pt-5', style='width: 1000px', 
+         text='Toda la información que edite en el formulario se modificará '\
+        'para el producto una vez guarde los cambios. Si el proceso se da '\
+        'de forma exitosa, volverá inmediatamente a la página inicial.')
+    jp.P(a=d, classes='px-12 pt-5', style='width: 1000px', 
+         text='Los campos que contengan un punto (.) son aquellos que se '\
+         'encuentran vacíos. Si desea que permanezcan vacíos, no es '\
+         'necesario editarlos.')
+    jp.P(text='Note que para ingresar múltiples colores y/o tallas, '\
+        'debe separarlos por comas y que no puede incluir el caractér "-" '\
+        'en los mismos. Los valores repetidos se ignorarán. Por ejemplo: '\
+        'ingresando "S, M, L", "S,M,L", "S, M, , L" o "S,S,M,L" indicaría '\
+        'que existen las tallas S, M y L.', classes='px-12 pt-5', 
+        style='width: 1000px', a=d)
+    product_form = jp.Form(a=d, style='width: 1000px', 
+                           classes='flex flex-wrap flex-col justify-start '\
+                           'space-x-5 p-8')
+    product = db.get_from_db(model.Product, request.path_params['id'])
+    for t in ('Nombre', 'Descripcion', 'Colores', 'Tallas'):
+        label = jp.Label(a=product_form, text=t, classes=label_classes)
+        if t == 'Nombre':
+            label.for_component = jp.Textarea(a=product_form, required=True,
+                                              classes=input_classes+' mb-5',
+                                              name=t, value=product.name,
+                                              rows=1)
+        elif t == 'Descripcion':
+            label.for_component = jp.Textarea(a=product_form, name=t,
+                                              classes=input_classes+' mb-5',
+                                              value=product.description,
+                                              rows=1)
+        elif t == 'Colores':
+            label.for_component = jp.Textarea(a=product_form, name=t,
+                                              classes=input_classes+' mb-5',
+                                              value=product.colors,
+                                              rows=1)
+        elif t == 'Tallas':
+            label.for_component = jp.Textarea(a=product_form, name=t,
+                                              classes=input_classes+' mb-5',
+                                              value=product.sizes,
+                                              rows=1)
+    for t in ('Precio', 'Unidades disponibles'):
+        label = jp.Label(a=product_form, text=t, classes=label_classes)
+        if t == 'Precio':
+            label.for_component = jp.Input(a=product_form, name=t, min=1,
+                                           type='number', required=True,
+                                           classes=input_classes+' mb-5',
+                                           value=product.price)
+        elif t == 'Unidades disponibles':
+            label.for_component = jp.Input(a=product_form, name=t, min=1,
+                                           type='number', required=True,
+                                           classes=input_classes+' mb-5',
+                                           value=product.available_units)
     
+    # Select object for categories
+    label_cat = jp.Label(a=product_form, text='Categoría',
+                         classes=label_classes)
+    category_select = jp.Select(a=product_form, name='Categoria',
+                                value=product.category, text=product.category,
+                                classes='border-2 hover:bg-pink-400 mb-5')
+    for cat in model.Category._value2member_map_:
+        category_select.add(jp.Option(value=cat, text=cat))
+    label_cat.for_component = category_select
+    
+    # Adds div where indication will be displayed
+    product_form.indication = jp.Div(a=product_form,
+                                     classes='text-red-500 text-sm text-center')
+    
+    jp.Button(a=product_form, classes=button_classes, type='submit',
+              text='Guardar cambios')
+    
+    product_form.product_id = request.path_params['id']
+    #product_form.on('submit', submit_modified_product_form)
+    
+    return product_mod_wp
+
 def modify_products(section_div: jp.Div) -> None:
-    pass
+    """Adds components that allow for modifying the product database.
+    
+    Parameters:
+    section_div (Div): Div the section will be rendered in.   
+    """
+    def delete_product(caller, msg) -> None:
+        fetched_product = db.get_from_db(model.Product, id_input.value)
+        id_input.value = ''
+        if fetched_product is None:
+            # Indicates no product with input ID exists
+            id_input.indication.text = 'ID inválido.'
+        else:
+            # Deletes product with input ID
+            db.delete_from_db(model.Product, fetched_product.product_id)
+            id_input.indication.text = 'Producto eliminado con éxito.'
+    
+    def modify_product(caller, msg) -> None:
+        fetched_product = db.get_from_db(model.Product, id_input.value)
+        id_input.value = ''
+        if fetched_product is None:
+            # Indicates no product with input ID exists
+            id_input.indication.text = 'ID inválido.'
+        else:
+            # Deletes product with input ID
+            msg.page.redirect = f'/modify_product/{fetched_product.product_id}'
+        
+            msg.product = fetched_product
+    
+    def empty_indication(caller, msg) -> None:
+        id_input.indication.text = ''
+            
+    d = jp.Div(a=section_div, style='width: 400px', 
+               classes='flex flex-col items-center m-10 w-full')
+    id_input = jp.Input(a=d, classes=input_classes+' mb-5',
+                        placeholder='Ingrese ID de producto')
+    id_input.indication = jp.Div(classes='text-red-500 text-sm text-center',
+                                 a=d)
+    id_input.on('change', empty_indication)
+        
+    jp.Button(a=d, classes=button_classes+' mb-5', text='Eliminar producto',
+              click=delete_product)
+    jp.Button(a=d, classes=button_classes, text='Modificar producto',
+              click=modify_product)
+    
+def submit_product_form(caller, msg) -> None:
+    error_message = ''
+    data = {}
+    # Collects form data into a dictionary
+    for input in msg.form_data:
+        if input.name=='Colores' or input.name=='Tallas':
+            if input.value.find('-') != -1:
+                # Informs of error if input contains "-"
+                error_message += 'Los colores y tallas no pueden contener el caractér "-". Deben estar separados por comas.'
+                break
+            else:
+                # Organizes input to conform to the way colors and sizes
+                # are stored in the database and stores result in data dict
+                
+                # Separates values
+                spl_list = []
+                for v in input.value.split(','):
+                    if v.strip() != '':
+                        spl_list.append(v.strip())
+                # Adds non-repeated values
+                data[input.name] = ''
+                for id, el1 in (enumerate(spl_list)):
+                    for el2 in spl_list[:id]:
+                        if el1 == el2:
+                            spl_list.remove(el1)
+                            break
+                    else:
+                        data[input.name] += el1 + '-'
+                data[input.name] = data[input.name][:-1]
+        elif input.value.strip() == '' or input.values.isspace():
+            data[input.name] = '.'
+        elif input.type=='file':
+            data['img'] = input
+            f = input
+        else:
+            data[input.name] = input.value.strip()
+        if len(data) == 8:
+            break
+        
+    if error_message != '':
+        caller.indication.text = error_message
+    else:
+        # Tries adding product to database
+        try:
+            # Creates new product
+            new_product = model.Product(
+                name=data['Nombre'],
+                price=float(data['Precio']),
+                category=data['Categoria'],
+                description=data['Descripcion'],
+                colors=data['Colores'],
+                sizes=data['Tallas'],
+                available_units=int(data['Unidades disponibles']),
+            )
+            # Adds to database
+            new_product.add_product(data['img'])
+            # Redirects to admin page
+            msg.page.redirect = '/admin'
+        except Exception as e:
+            # Shows exception message in the page
+            caller.indication.text = str(e)
+    
+@jp.SetRoute('/new_product')
+@valid_session
+def new_product_page(request) -> jp.WebPage:
+    new_product_wp = jp.WebPage()
+    d = jp.Div(a=new_product_wp, classes='flex flex-col items-center w-full')
+    jp.P(text='Para añadir un nuevo producto, debe indicar por lo menos '\
+        'nombre, precio, unidades disponibles y categoría, así como subir '\
+        'una o más imágenes. Si el proceso se da de forma exitosa, volverá '\
+        'inmediatamente a la página inicial.', classes='px-12 pt-5', 
+        style='width: 1000px', a=d)
+    jp.P(text='Note que para ingresar múltiples colores y/o tallas, '\
+        'debe separarlos por comas y que no puede incluir el caractér "-" '\
+        'en los mismos. Los valores repetidos se ignorarán. Por ejemplo: '\
+        'ingresando "S, M, L", "S,M,L", "S, M, , L" o "S,S,M,L" indicaría '\
+        'que existen las tallas S, M y L.', classes='px-12 pt-5', 
+        style='width: 1000px', a=d)
+    product_form = jp.Form(a=d, style='width: 1000px', 
+                           classes='flex flex-wrap flex-col justify-start '\
+                           'space-x-5 p-8', enctype='multipart/form-data')
+    for t in ('Nombre', 'Descripcion', 'Colores', 'Tallas'):
+        label = jp.Label(a=product_form, text=t, classes=label_classes)
+        if t == 'Nombre':
+            label.for_component = jp.Textarea(a=product_form, name=t, rows=1,
+                                              classes=input_classes+' mb-5',
+                                              required=True)
+        else:
+            label.for_component = jp.Textarea(a=product_form, name=t, rows=1,
+                                              classes=input_classes+' mb-5')
+    for t in ('Precio', 'Unidades disponibles'):
+        label = jp.Label(a=product_form, text=t, classes=label_classes)
+        label.for_component = jp.Input(a=product_form, name=t, rows=1,
+                                       type='number', min=1, required=True,
+                                       classes=input_classes+' mb-5')
+    
+    # Select object for categories
+    label_cat = jp.Label(a=product_form, text='Categoría',
+                         classes=label_classes)
+    category_select = jp.Select(a=product_form, name='Categoria', required=True,
+                                classes='border-2 hover:bg-pink-400 mb-5')
+    for cat in model.Category._value2member_map_:
+        category_select.add(jp.Option(value=cat, text=cat))
+    label_cat.for_component = category_select
+    
+    jp.Input(a=product_form, type='file', accept='image/*', multiple=True,
+             classes=jp.Styles.input_classes+' mb-5 w-full', required=True)
+    
+    # Adds div where indication will be displayed
+    product_form.indication = jp.Div(a=product_form,
+                                     classes='text-red-500 text-sm text-center')
+    
+    jp.Button(a=product_form, classes=button_classes, type='submit',
+              text='Añadir producto')
+    
+    product_form.on('submit', submit_product_form)
+    
+    return new_product_wp
 
 def add_products(section_div: jp.Div) -> None:
-    pass
+    """Adds components that allow for the addition of a new product.
+    
+    Parameters:
+    section_div(Div): Div the section will be rendered in.
+    """
+    jp.Button(a=section_div, text='Ir a formulario',
+              classes=button_classes + ' my-20 mx-96',
+              click='msg.page.redirect=\'/new_product\'')
 
 def modify_profile(section_div: jp.Div) -> None:
-    
+    """Adds components displaying current profile information that allow for
+    its modification.
+    Parameters:
+    section_div(Div): Div the section will be rendered in.
+    """
     def save_changes(caller: jp.Form, msg) -> None:
         for input in msg.form_data:
             if input.name in ('Quienes somos', 'Correo',
@@ -892,9 +1155,9 @@ def modify_profile(section_div: jp.Div) -> None:
     def empty_indication(caller, msg) -> None:
         form.indication.text = ''
         
-    form = jp.Form(a=section_div,
+    form = jp.Form(a=section_div, style='width: 1000px',
                    classes='flex flex-wrap flex-col justify-start '\
-                       'space-x-5 w-7/8 p-8')
+                   'space-x-5 p-8')
     profile_content = file.get_file_content('perfil.txt')
     for key in profile_content.keys():
         label = jp.Label(a=form, text=key, classes=label_classes)
@@ -918,24 +1181,58 @@ def modify_profile(section_div: jp.Div) -> None:
     
     form.on('submit', save_changes)
 
+def modify_account(section_div: jp.Div) -> None:
+    """Adds components that allow for the modification of admin account data.
+    Parameters:
+    section_div(Div): Div the section will be rendered in.
+    """
+    def save_account_changes(caller: jp.Form, msg) -> None:
+        data = {}
+        for input in msg.form_data:
+            if input.name in ('Contraseña actual', 'Nueva contraseña', 'Nuevo usuario'):
+                if input.value.strip()=="":
+                    data[input.name] = None
+                else:
+                    data[input.name] = input.value
+        try:
+            hasher.change_account_info(current_password=data['Contraseña actual'],
+                                       new_password=data['Nueva contraseña'],
+                                       new_user=data['Nuevo usuario'])
+            acc_form.indication.text = 'Los cambios fueron realizados con éxito.'
+        except Exception as e:
+            acc_form.indication.text = str(e)
+    
+    def empty_indication(caller, msg) -> None:
+        acc_form.indication.text = ''
+        
+    acc_form = jp.Form(a=section_div, style='width: 1000px',
+                       classes='flex flex-wrap flex-col justify-start '\
+                       'space-x-5 p-8')
+    for t in ('Contraseña actual', 'Nueva contraseña', 'Nuevo usuario'):
+        label = jp.Label(a=acc_form, text=t, classes=label_classes)
+        if t == 'Contraseña actual':
+            label.for_component = jp.Input(a=acc_form, name=t, required=True,
+                                           classes=input_classes+' mb-5')
+        else:    
+            label.for_component = jp.Input(a=acc_form, name=t, 
+                                           classes=input_classes+' mb-5')
+
+    # Adds div where indication will be displayed
+    acc_form.indication = jp.Div(a=acc_form, classes='text-red-500 text-sm text-center')
+    acc_form.on('click', empty_indication)
+    
+    jp.Button(a=acc_form, classes=button_classes, type='submit',
+              text='Guardar cambios')
+    
+    acc_form.on('submit', save_account_changes)
+
 admin_sections = [
     model.Section('Órdenes', display_all_orders),
     model.Section('Modificar Productos', modify_products),
     model.Section('Añadir Productos', add_products),
     model.Section('Modificar Perfil', modify_profile),
+    model.Section('Modificar Cuenta', modify_account),
 ]
-
-def valid_session(f):
-    # TODO: check if valid_session has to be reimplemented as a method
-    @wraps(f)
-    def wrapper(request) -> (Any | jp.WebPage):
-        # Allows access to admin section if admin is logged in in the current
-        # session ID, otherwise, it redirects the user to main webpage
-        if request.session_id in admin_sessions:
-            return f(request)
-        else:
-            return jp.redirect('/main')
-    return wrapper
 
 @jp.SetRoute('/admin')
 @valid_session
@@ -996,4 +1293,4 @@ def admin_section(request) -> jp.WebPage:
         
     return admin_wp
 
-jp.justpy(main_page)
+jp.justpy(main_page)#, websockets=False)

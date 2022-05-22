@@ -46,5 +46,4 @@ def get_content_by_field(filename: str, field: str) -> str:
         if line != '':
             return line.split(';', 1)[1].strip()
         else:
-            return None
-            
+            return None       

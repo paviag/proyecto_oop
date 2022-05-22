@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import date
 from enum import Enum
 from typing import Any, cast
+import base64
 
 import justpy as jp
 import argon2
@@ -37,15 +38,74 @@ class Product(Base):
     colors = Column(Text)
     sizes = Column(Text)
     available_units = Column(Integer)
+    
+    def __init__(self, *, product_id: str = None, name: str, price: float,
+                 category: str, description: str, images: str = None, 
+                 colors: str, sizes: str, available_units: int) -> None:
+        if product_id != None:
+            self.product_id = product_id
+        else:
+            self.product_id = db.get_new_id(Product.product_id)
+        self.name = name
+        self.price = price
+        self.category = category
+        self.description = description
+        if images != None:
+            self.images = images
+        else:
+            self.images = 'Por añadir'
+        self.colors = colors
+        self.sizes = sizes
+        self.available_units = available_units
 
     def delete_product(self) -> None:
         """Deletes a product from database."""
-        ...
+        db.delete_from_db(Product, self.product_id)
         
     def update_product(self) -> None:
-        """Modifies a product's attributes, and subsequently, its row in
-        the database."""
-        ...
+        """Modifies a product's information in the database."""
+        
+        session = db.get_session()
+        db_object = session.get(Product, self.product_id)
+        db_object.name = self.name
+        db_object.price = self.price
+        db_object.category = self.category
+        db_object.description = self.description
+        db_object.colors = self.colors
+        db_object.sizes = self.sizes
+        db_object.available_units = self.available_units
+        session.commit()
+    
+    def add_product(self, file_input) -> None:
+        """Adds product to database.
+        
+        Parameters:
+        file_input: Element containing images.
+        """
+        if db.row_count(Product) > 1000:
+            # Limit of products in database has been reached
+            raise Exception('Límite de productos alcanzado.')
+        else:
+            # Uploads images to static folder and links product to them
+            self.upload_images(file_input)
+            # Adds product to database
+            db.add_to_db(self)
+    
+    def upload_images(self, file_input) -> None:
+        """Uploads a product's images to the static folder and links
+        product to them.
+        
+        Parameters:
+        file_input: Element containing images.
+        """
+        # Writes the content to a file after decoding the base64 content
+        pic_names = ''
+        for i, v in enumerate(file_input.files):
+            with open(f'media/{self.product_id}_{i}_{v.name}', 'wb') as file_input:
+                pic_names += f'{self.product_id}_{i}_{v.name}-'
+                file_input.write(base64.b64decode(v.file_content))     
+        pic_names = pic_names[:-1]
+        self.images = pic_names
 
 
 class Item():
@@ -110,8 +170,6 @@ class Order(Base):
         new_status (str): New status to assign to the order.
         """
         
-        # TODO (hopefully): change so that modification and deletion can 
-        # happen from the get-go without fetching again from database
         session = db.get_session()
         db_object = session.get(Order, self.order_id)
         if new_status == OrderStatus.DELIVERED:
@@ -418,37 +476,3 @@ class TabsPills(jp.Div):
         d = super().convert_object_to_dict()
 
         return d
-
-
-class PasswordHasher(argon2.PasswordHasher):
-    def __init__(self) -> None:
-        super().__init__(time_cost=3, memory_cost=64*1024,
-                         parallelism=1, hash_len=32, salt_len=16)
-    
-    def change_password(self, current_password: str,
-                        new_password: str) -> None:
-        """Changes stored password if the given current password is valid.
-        
-        Parameters:
-        current_password (str): Currently stored password.
-        new_password (str): New password to store.
-        """
-        if self.verify_password(current_password):
-            new_password_hash = self.hash(new_password)
-            file.write_over_file('admin.txt', 'Contraseña', new_password_hash)
-        else:
-            raise Exception('La contraseña ingresada es incorrecta.')
-            
-    def verify_password(self, string: str) -> bool:
-        """Returns True if the string matches the stored password or False
-        if not.
-        
-        Parameters:
-        string (str): String to compare to stored password.
-        """
-        stored_password = file.get_content_by_field('admin.txt', 'Contraseña')
-        try:
-            super().verify(stored_password, string)
-            return True
-        except:
-            return False

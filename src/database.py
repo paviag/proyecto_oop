@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+import base64
 
 from sqlalchemy import Column, Integer, create_engine, func
 from sqlalchemy.orm import sessionmaker
@@ -79,7 +80,7 @@ def row_count(table_class) -> int:
     session = get_session()
     return session.query(table_class).count()
 
-def get_new_id(id_column: Column | str) -> str:
+def get_new_id(id_column: Column) -> str:
     """Returns ID for a new row in a database table.
     
     The ID generated is a six-character string that is made up of a number
@@ -87,7 +88,7 @@ def get_new_id(id_column: Column | str) -> str:
     will not be occupied by any other row in the table.
     
     Parameters:
-    id_column (str): Column of a database table that contains its ID.
+    id_column: Column of a database table that contains its ID.
     
     Returns:
     str: Corresponds to the ID that should be assigned to a new row.
@@ -103,12 +104,17 @@ def get_new_id(id_column: Column | str) -> str:
         else:
             # Starts from ID 000001 until finding an ID that does not 
             # correspond to an already existing row in the given column
+            # if it does not find one, it returns an empty string
             new_id_number = 1
             repeated_id = id_column==str(new_id_number).zfill(6)
-            while session.query(id_column).filter(repeated_id).first() is not None:
+            while (session.query(id_column).filter(repeated_id).first() is not None 
+                   and new_id_number<10**9):
                 new_id_number += 1
                 repeated_id = id_column==str(new_id_number).zfill(6)
-            return str(new_id_number).zfill(6)
+            if new_id_number >= 10**9:
+                return ''
+            else:
+                return str(new_id_number).zfill(6)
     else:
         # Assigns starting ID value (000001)
         return '1'.zfill(6)
