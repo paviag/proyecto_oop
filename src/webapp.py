@@ -1198,7 +1198,10 @@ def modify_account(section_div: jp.Div) -> None:
             hasher.change_account_info(current_password=data['Contraseña actual'],
                                        new_password=data['Nueva contraseña'],
                                        new_user=data['Nuevo usuario'])
-            acc_form.indication.text = 'Los cambios fueron realizados con éxito.'
+            if data['Nueva contraseña'] != None:
+                acc_form.indication.text = 'Se cambió la contraseña.'
+            if data['Nuevo usuario'] != None:
+                acc_form.indication.text += ' Se cambió el usuario.'
         except Exception as e:
             acc_form.indication.text = str(e)
     

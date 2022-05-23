@@ -29,20 +29,26 @@ def change_account_info(*, current_password: str, new_password: str = None,
     new_user (str): New user to store.
     """
     # Checks if current password given is correct
-    if verify_password(current_password):
-        if new_user != None:
-            # Checks if new user abides by rules, modifies it if so and raises exception if not
-            if new_user.strip()!="" and new_user.isascii() and new_user.isalnum():
-                file.write_over_file('admin.txt', 'Usuario', new_user)
+    if current_password != None:
+        if verify_password(current_password):
+            if not(new_user==None and new_password==None):
+                if new_user != None:
+                    # Checks if new user abides by rules, modifies it if so and raises exception if not
+                    if new_user.strip()!="" and new_user.isascii() and new_user.isalnum():
+                        file.write_over_file('admin.txt', 'Usuario', new_user)
+                    else:
+                        raise Exception('El usuario no puede contener tildes, espacios o demás caracteres especiales.')
+                if new_password != None:
+                    # Checks if new user abides by rules, modifies it if so and raises exception if not
+                    if new_password.strip()!="" and new_password.isascii() and new_password.isalnum():
+                        # Modifies stored password hash
+                        new_password_hash = _hasher.hash(new_password)
+                        file.write_over_file('admin.txt', 'Clave', new_password_hash)
+                    else:
+                        raise Exception('La contraseña no puede contener tildes, espacios o demás caracteres especiales.')
             else:
-                raise Exception('El usuario no puede contener tildes, espacios o demás caracteres especiales.')
-        if new_password != None:
-            # Checks if new user abides by rules, modifies it if so and raises exception if not
-            if new_password.strip()!="" and new_password.isascii() and new_password.isalnum():
-                # Modifies stored password hash
-                new_password_hash = _hasher.hash(new_password)
-                file.write_over_file('admin.txt', 'Clave', new_password_hash)
-            else:
-                raise Exception('La contraseña no puede contener tildes, espacios o demás caracteres especiales.')
+                raise Exception('No se ingresó ningún campo a cambiar.')
+        else:
+            raise Exception('La contraseña ingresada es incorrecta.')
     else:
-        raise Exception('La contraseña ingresada es incorrecta.')
+        raise Exception('No se ingresó contraseña actual.')
