@@ -8,59 +8,61 @@ skinparam class {
     BorderColor #000000
 }
 
-class Product {
-    +product_id : str
-    +name : str
-    +price : float
-    +category : Category
-    +description : str
-    +images : list[str]
-    +colors : list[str]
-    +sizes : list[str]
-    +availability : bool
-    +delete_product() : None
-    +update_product() : None
+class Product extends sqlalchemy.ext.declarative.declarative_base {
+    +product_id: str
+    +name: str
+    +price: float
+    +category: Category
+    +description: str
+    +images: str
+    +colors: str
+    +sizes: str
+    +available_units: int
+    +delete_product(): None
+    +update_product(): None
+    +add_product(file_input): None
+    +upload_images(file_input): None
 }
 
-class Order {
-    +order_id : str
-    +total : float
-    +buyer_name : str
-    +buyer_email : str
-    +buyer_phone : str
-    +ship_city : str
-    +ship_department : str
-    +ship_address : str
-    +ship_zipcode : str
-    +date : date
-    +status : OrderStatus
-    +update_status(status : OrderStatus) : None
+class Order extends sqlalchemy.ext.declarative.declarative_base {
+    +order_id: str
+    +total: float
+    +buyer_name: str
+    +buyer_email: str
+    +buyer_phone: str
+    +ship_city: str
+    +ship_department: str
+    +ship_address: str
+    +ship_zipcode: str
+    +date: date
+    +status: OrderStatus
+    +update_status(new_status: OrderStatus): None
+    +get_delivery_fee(ship_city: str): float
 }
 
 class Cart {
-    +cart_items : list[CartItem]
-    +get_cart_total() : float
-    +get_total_quantity() : int
-    +add_item(item : CartItem) : None
-    +remove_item(item : CartItem) : None
-    +place_order() : None
+    +cart_items: list[CartItem]
+    +cart_total(): float
+    +add_item(product_id: str, quantity: int, color: str, size: str): None
+    +remove_item(item: CartItem): None
+    +place_order(new_order_id: str, buyer_info: dict[str, str]): None
 }
 
 class Item {
-    +product_id : str
-    +quantity : int
-    +color : str
-    +size : str
+    +product_id: str
+    +quantity: int
+    +color: str
+    +size: str
+    +related_product(): Product
 }
 
-class OrderItem {
-    +order_id : str
+class OrderItem extends sqlalchemy.ext.declarative.declarative_base {
+    +order_id: str
 }
 
 class CartItem {
-    +get_item_total() : float
-    +increase_quantity() : None
-    +decrease_quantity() : None
+    +item_total(): float
+    +change_quantity(amount: int): None
 }
 
 enum Category {
@@ -75,13 +77,45 @@ enum OrderStatus {
     PENDING
     APPROVED
     DENIED
-    FINISHED
+    DELIVERED
+}
+
+class Section {
+    +name: str
+    +link: function
+}
+
+class TabsPills extends justpy.Div {
+    +item_classes: str
+    +item_classes_selected: str
+    +wrapper_style: str
+    +tabs: dict[str, Any]
+    +value: str
+    +content_height: int
+    +last_rendered_value: str
+    +text_color: str
+    +hover_bg: str
+    +selected_text_color: str
+    +tab_list_bg: str
+    +border: str
+    +tab_label_classes: str
+    +tab_label_classes_selected: str
+    +tab_list: justpy.Ul
+    +content_div: justpy.Div
+    +delete_list: list[dict[str, str]]
+    +add_tab(id: str, label: str, content: justpy.Div): None
+    +get_tab_by_id(id: str): dict[str, Any]
+    +set_content_div(tab: dict[str, Any]): None
+    +model_update(): None
+    +delete(): None
+    +tab_click(msg: dict[str, str]): bool|function
+    +convert_object_to_dict(): dict[str, str]
 }
 
 CartItem -u-|> Item
 OrderItem --l--|> Item
-Item "1..*" -l-- "1" Product : references >
-Cart "1" -u-> "1" Order : creates
-Cart "1" o-l-> "0..*" CartItem : contains
-OrderItem "1..*" -r- "1" Order : > belongs to
+Item "1..*" -l-- "1" Product: references >
+Cart -u-> Order: creates >
+Cart "1" o-l-> "0..*" CartItem: contains
+OrderItem "1..*" -r- "1" Order: > belongs to
 @enduml

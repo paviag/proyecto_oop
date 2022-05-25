@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 def get_file_content(filename: str) -> dict[str, str]:
     """Returns content from a text file in the form of a dict."""
     content = dict()
-    with open(f'{filename}') as f:
+    with open(file=f'{filename}', encoding='utf-8') as f:
         while (line:=f.readline()) != '':
             line = line.removesuffix('\n').split(';', 1)
             content[line[0]] = line[1]
@@ -16,7 +18,7 @@ def write_over_file(filename: str, field: str, new_info: str) -> None:
     new_info (str): String that will replace the previous content of 
     the field.
     """
-    f = open(filename, 'r')
+    f = open(file=filename, mode='r', encoding='utf-8')
     new_file_content = ''
     for line in f:
         line = line.strip()
@@ -39,11 +41,11 @@ def get_content_by_field(filename: str, field: str) -> str:
     Returns:
     str: Content of the specified field.
     """
-    with open(filename) as f:
+    with open(file=filename, encoding='utf-8') as f:
         line = f.readline()
         while line!='' and line.split(';', 1)[0]!=field:
             line = f.readline()
         if line != '':
             return line.split(';', 1)[1].strip()
         else:
-            return None       
+            return None

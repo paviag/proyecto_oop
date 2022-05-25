@@ -4,9 +4,9 @@ from datetime import date
 from enum import Enum
 from typing import Any, cast
 import base64
+import os
 
 import justpy as jp
-import argon2
 from sqlalchemy import Column, Float, ForeignKey, Integer, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, relationship
@@ -40,7 +40,7 @@ class Product(Base):
     available_units = Column(Integer)
     
     def __init__(self, *, product_id: str = None, name: str, price: float,
-                 category: str, description: str, images: str = None, 
+                 category: str, description: str, images: str = 'Por añadir', 
                  colors: str, sizes: str, available_units: int) -> None:
         if product_id != None:
             self.product_id = product_id
@@ -50,16 +50,18 @@ class Product(Base):
         self.price = price
         self.category = category
         self.description = description
-        if images != None:
-            self.images = images
-        else:
-            self.images = 'Por añadir'
+        self.images = images
         self.colors = colors
         self.sizes = sizes
         self.available_units = available_units
 
     def delete_product(self) -> None:
         """Deletes a product from database."""
+        
+        # Removes associated images from static folder
+        for img in self.images.split('-'):
+            os.remove(f'media/{img}')
+        # Removes from database
         db.delete_from_db(Product, self.product_id)
         
     def update_product(self) -> None:
@@ -98,6 +100,7 @@ class Product(Base):
         Parameters:
         file_input: Element containing images.
         """
+        
         # Writes the content to a file after decoding the base64 content
         pic_names = ''
         for i, v in enumerate(file_input.files):
@@ -179,7 +182,11 @@ class Order(Base):
         session.commit()
     
     def get_delivery_fee(ship_city: str) -> float:
-        """Returns delivery fee of an order based on the city it ships to."""
+        """Returns delivery fee of an order based on the city it ships to.
+        
+        Parameters:
+        ship_city (str): City that the fee should be calculated for.
+        """
         ship_city = ship_city.strip().title()
         delivery_fee = file.get_content_by_field('costo_envios.txt',
                                                  ship_city)
@@ -258,16 +265,7 @@ class Cart():
             return sum([item.item_total for item in self.cart_items])
         else:
             return 0
-    
-    @property
-    def total_quantity(self) -> int:
-        """Returns total number of items in cart."""
-        
-        if len(self.cart_items) > 0:
-            return sum([item.quantity for item in self.cart_items])
-        else:
-            return 0
-    
+ 
     def add_item(self, product_id: str, quantity: int, 
                  color: str, size: str) -> None:
         """Adds item to cart.
@@ -327,7 +325,7 @@ class Cart():
             raise Exception('Límite de órdenes alcanzado.')
         else:
             # Creates order with given information and adds to database
-            new_order_id = db.get_new_id(Order.order_id)
+            new_order_id = new_order_id
             new_order = Order(
                 order_id=new_order_id,
                 cart_total=self.cart_total,
@@ -394,7 +392,7 @@ class TabsPills(jp.Div):
         self.delete_list = []
 
 
-    def __setattr__(self, key, value):
+    def __setattr__(self, key, value) -> None:
         if key == 'value':
             try:
                 self.previous_value = self.value
@@ -402,7 +400,7 @@ class TabsPills(jp.Div):
                 pass
         self.__dict__[key] = value
 
-    def add_tab(self, id, label, content):
+    def add_tab(self, id, label, content) -> None:
         self.tabs.append({'id': id, 'label': label, 'content': content})
         if not self.value:
             self.value = id

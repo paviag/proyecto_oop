@@ -2,7 +2,6 @@ from functools import wraps
 from typing import Any
 
 import justpy as jp
-import base64
 
 import model
 import database as db
@@ -524,7 +523,6 @@ def cart_section(section_div: jp.Div) -> None:
         await reload_cart(msg)
         
     async def submit_order_form(caller: jp.Form, msg) -> None:
-        # TODO: add more strict validation
         data_dict = {}
         for input in msg.form_data:
             if input.name == 'Nombre':
@@ -541,6 +539,7 @@ def cart_section(section_div: jp.Div) -> None:
                 data_dict['address'] = input.value
             elif input.name == 'Código Postal':
                 data_dict['zipcode'] = input.value
+                
         # Gets ID for new order
         new_order_id = db.get_new_id(model.Order.order_id)
 
@@ -591,7 +590,6 @@ def cart_section(section_div: jp.Div) -> None:
         form = jp.Form(a=all_items_div, style='height: 290px',
                        classes='flex flex-wrap flex-col justify-start '\
                        'space-x-5')
-        # TODO: add drop-down menu for Ciudad, Departamento
         for label_text in ['Nombre', 'Correo electrónico',
                            'Teléfono', 'Ciudad', 'Departamento',
                            'Dirección', 'Código Postal']:
@@ -885,6 +883,66 @@ def display_all_orders(section_div: jp.Div) -> None:
         jp.P(a=section_div, text='No hay órdenes que mostrar.',
              classes='text-center text-lg m-10')
 
+def submit_modification_form(caller: jp.Form, msg) -> None:
+    error_message = ''
+    data = {}
+    # Collects form data into a dictionary
+    for input in msg.form_data:
+        if input.name=='Colores' or input.name=='Tallas':
+            if input.value.find('-') != -1:
+                # Informs of error if input contains "-"
+                error_message += 'Los colores y tallas no pueden contener el caractér "-". Deben estar separados por comas.'
+                break
+            else:
+                if input.value.strip() == '':
+                    data[input.name] = '.'
+                else:
+                    # Organizes input to conform to the way colors and sizes
+                    # are stored in the database and stores result in data dict
+                    
+                    # Separates values
+                    spl_list = []
+                    for v in input.value.split(','):
+                        if v.strip() != '':
+                            spl_list.append(v.strip())
+                    # Adds non-repeated values
+                    data[input.name] = ''
+                    for id, el1 in (enumerate(spl_list)):
+                        for el2 in spl_list[:id]:
+                            if el1 == el2:
+                                spl_list.remove(el1)
+                                break
+                        else:
+                            data[input.name] += el1 + '-'
+                    data[input.name] = data[input.name][:-1]
+        elif input.value.strip() == '':
+            data[input.name] = '.'
+        else:
+            data[input.name] = input.value.strip()
+        if len(data) == 7:
+            break
+        
+    if error_message != '':
+        caller.indication.text = error_message
+    else:
+        try:
+            modified_product = model.Product(
+                product_id=caller.product_id,
+                name=data['Nombre'],
+                price=float(data['Precio']),
+                category=data['Categoria'],
+                description=data['Descripcion'],
+                colors=data['Colores'],
+                sizes=data['Tallas'],
+                available_units=int(data['Unidades disponibles']),
+            )
+            modified_product.update_product()
+            # Redirects to admin page
+            msg.page.redirect = '/admin'
+        except Exception as e:
+            # Shows exception message in the page
+            caller.indication.text = str(e)
+   
 @jp.SetRoute('/modify_product/{id}')
 @valid_session
 def product_modification_page(request) -> jp.WebPage:
@@ -961,7 +1019,7 @@ def product_modification_page(request) -> jp.WebPage:
               text='Guardar cambios')
     
     product_form.product_id = request.path_params['id']
-    #product_form.on('submit', submit_modified_product_form)
+    product_form.on('submit', submit_modification_form)
     
     return product_mod_wp
 
@@ -979,7 +1037,18 @@ def modify_products(section_div: jp.Div) -> None:
             id_input.indication.text = 'ID inválido.'
         else:
             # Deletes product with input ID
-            db.delete_from_db(model.Product, fetched_product.product_id)
+            p = model.Product(
+                product_id=fetched_product.product_id,
+                name=fetched_product.name,
+                price=fetched_product.price,
+                category=fetched_product.category,
+                description=fetched_product.description,
+                images=fetched_product.images,
+                colors=fetched_product.colors,
+                sizes=fetched_product.sizes,
+                available_units=fetched_product.available_units,
+            )
+            p.delete_product()
             id_input.indication.text = 'Producto eliminado con éxito.'
     
     def modify_product(caller, msg) -> None:
@@ -989,9 +1058,8 @@ def modify_products(section_div: jp.Div) -> None:
             # Indicates no product with input ID exists
             id_input.indication.text = 'ID inválido.'
         else:
-            # Deletes product with input ID
+            # Redirects to product modification page
             msg.page.redirect = f'/modify_product/{fetched_product.product_id}'
-        
             msg.product = fetched_product
     
     def empty_indication(caller, msg) -> None:
@@ -1021,29 +1089,31 @@ def submit_product_form(caller, msg) -> None:
                 error_message += 'Los colores y tallas no pueden contener el caractér "-". Deben estar separados por comas.'
                 break
             else:
-                # Organizes input to conform to the way colors and sizes
-                # are stored in the database and stores result in data dict
-                
-                # Separates values
-                spl_list = []
-                for v in input.value.split(','):
-                    if v.strip() != '':
-                        spl_list.append(v.strip())
-                # Adds non-repeated values
-                data[input.name] = ''
-                for id, el1 in (enumerate(spl_list)):
-                    for el2 in spl_list[:id]:
-                        if el1 == el2:
-                            spl_list.remove(el1)
-                            break
-                    else:
-                        data[input.name] += el1 + '-'
-                data[input.name] = data[input.name][:-1]
-        elif input.value.strip() == '' or input.values.isspace():
+                if input.value.strip() == '':
+                    data[input.name] = '.'
+                else:
+                    # Organizes input to conform to the way colors and sizes
+                    # are stored in the database and stores result in data dict
+                        
+                    # Separates values
+                    spl_list = []
+                    for v in input.value.split(','):
+                        if v.strip() != '':
+                            spl_list.append(v.strip())
+                    # Adds non-repeated values
+                    data[input.name] = ''
+                    for id, el1 in (enumerate(spl_list)):
+                        for el2 in spl_list[:id]:
+                            if el1 == el2:
+                                spl_list.remove(el1)
+                                break
+                        else:
+                            data[input.name] += el1 + '-'
+                    data[input.name] = data[input.name][:-1]
+        elif input.value.strip() == '':
             data[input.name] = '.'
         elif input.type=='file':
             data['img'] = input
-            f = input
         else:
             data[input.name] = input.value.strip()
         if len(data) == 8:
@@ -1296,4 +1366,4 @@ def admin_section(request) -> jp.WebPage:
         
     return admin_wp
 
-jp.justpy(main_page)#, websockets=False)
+jp.justpy(main_page)

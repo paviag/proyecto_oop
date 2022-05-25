@@ -2,7 +2,7 @@ import argon2
 import file_handling as file
 
 _hasher = argon2.PasswordHasher(time_cost=3, memory_cost=64*1024, salt_len=16,
-                               parallelism=1, hash_len=32, encoding='utf-8')
+                                parallelism=1, hash_len=32, encoding='utf-8')
 
 def verify_password(string: str) -> bool:
     """Returns True if the string matches the stored password or False
