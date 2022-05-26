@@ -1,14 +1,21 @@
 # Buhi Store (Emily García, Gabriela Bula)
 
-## Functional requirements
-1. **Navigation bar:** Allows users to navigate the app’s sections through a navigation bar.
-2. **Shop section:** Showcases all available products from the database, displaying name, picture and price for each, and allows users to filter them by category. Clicking on a product leads to its Detail Page.
-3. **Product Detail Page:**
-    - Displays a page showing details of a selected product, including name, price, pictures, sizes and colors.
-    - Size and color boxes each allow for selecting one of their respective elements.
-    - Image container allows scrolling between images.
-    - Includes an input field that corresponds to quantity (not yet implemented).
-    - Includes an Add to Cart button that adds product to cart with selected options (not yet implemented).
+## UML Class Diagram
+![Image showing UML Class Diagram](https://user-images.githubusercontent.com/98894987/170511542-ade2d622-ee3d-4319-a089-0acd79567528.png)
+
+## User stories (as a summary of functional requirements)
+- User must have access to a navigation bar through which to access the main page's sections.
+- User must have access to the catalogue and be able to filter it by categories.
+- User must be able to visualize a product's details.
+- User must be able to add to cart products with a color, size and amount of their choice.
+- User must be able to consult information on the orders they have placed through their IDs.
+- User must be able to access/visualize the details of their shopping cart, including products, their characteristics, and total.
+- User must be able to modify the products in their shopping cart, by changing their quantities or deleting them.
+- User must be able to check-out and place an order with the products on their cart tied to their contact information.
+- Admin must be able to access Admin page/section through a user and password.
+- Admin must be able to modify the store's information located in the About Buhi section.
+- Admin must be able to modify their account's information (user and password).
+- Admin must be able to add, delete and modify products from catalogue.
 
 ## Testing functionality
 ### Requirements
@@ -31,16 +38,13 @@ This refers to port 8000 on the local machine and should work in most environmen
 For any more information on running programs that use JustPy, refer to [JustPy Tutorial: Getting Started](https://justpy.io/tutorial/getting_started/).
 
 #### Navigation bar
-This functionality cannot be tested to its full extent yet, given most of the pages it links to have not been created. It should be tested that clicking on a tab name leads to its corresponding page (only Shop section is implemented).
+It should be tested that clicking on a tab name leads to its corresponding page.
 
 #### Shop section
-- The showcase only of available products can be tested by checking if showcased products in Shop section match those in *shop.db Products* whose availability is True.
-- The filter for categories can be tested by checking that the showcased products correspond to the currently selected category in the secondary navigation bar.
+- The showcase only of available products can be tested by checking if showcased products in Shop section match those in *shop.db Products* whose number of available units is greater than zero.
+- The filter for categories can be tested by checking that the showcased products correspond to the currently selected category in the category navigation bar.
 
 #### Product Detail Page
 - Test its display by checking that clicking on a product in Shop section leads to a page that corresponds to said product. The name, price and first image should match those shown in the Shop section and the rest of the details should match those stored in the database.
 - The functionality of sizes and colors can be tested by clicking on their different values and checking that only one size and one color show can be selected at a time.
 - The functionality of the image container can be checked by attempting to scroll inside the container and verifying the scrolling matches the movement of the images.
-
-## UML Class Diagram
-![Image showing UML Class Diagram](https://user-images.githubusercontent.com/98894987/164505500-132d93f4-d83a-410c-ab55-1f607cc6516f.png)
