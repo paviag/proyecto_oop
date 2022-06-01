@@ -1,4 +1,5 @@
 pysqlite3
+argon2-cffi
 justpy
 SQLAlchemy==1.4.35
 sqlalchemy-explore
