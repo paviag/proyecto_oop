@@ -67,4 +67,4 @@ This refers to port 8000 on the local machine and should work in most environmen
 
 For any more information on running programs that use JustPy, refer to [JustPy Tutorial: Getting Started](https://justpy.io/tutorial/getting_started/).
 
-Once you have followed the instructions above, you should be able to test all of the app's functionalities, both buyer-side and seller-side. The default account currently set to access the seller side has user set as "usuario" and password set as "clave".
+Once you have followed the instructions above, you should be able to test all of the app's functionalities, both buyer side and seller side. The default account currently set to access the seller side has user set as "usuario" and password set as "clave".
