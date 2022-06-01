@@ -5,7 +5,7 @@
 Created by Emily García, Gabriela Bula
 
 ![Last commit](https://img.shields.io/badge/last%20commit-may%202022-lightgrey)
-![Python](https://img.shields.io/badge/python-v3.6+-blue.svg)
+[![Python](https://img.shields.io/badge/python-v3.6+-blue.svg?logo=python)](https://www.python.org)
 ![Build](https://img.shields.io/badge/build-passing-brightgreen)
 
 Buhi Store is an online shop currently active through Instagram. This project intends to take the existing shop’s infrastructure, adapt it and enhance it 
